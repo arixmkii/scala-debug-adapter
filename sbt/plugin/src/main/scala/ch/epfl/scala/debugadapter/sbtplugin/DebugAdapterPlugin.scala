@@ -1,7 +1,6 @@
 package ch.epfl.scala.debugadapter.sbtplugin
 
 import ch.epfl.scala.debugadapter.sbtplugin.internal._
-import ch.epfl.scala.debugadapter.sbtplugin.internal.JsonProtocol._
 import ch.epfl.scala.debugadapter.DebugServer
 import ch.epfl.scala.debugadapter.DebuggeeRunner
 
@@ -185,7 +184,12 @@ object DebugAdapterPlugin extends sbt.AutoPlugin {
         workingDirectory = Option(workingDirectory),
         runJVMOptions = params.jvmOptions,
         connectInput = false,
-        envVars = envVars
+        envVars = envVars ++ params.environmentVariables
+          .flatMap(_.split("=", 2).toList match {
+            case key :: value :: Nil => Some(key -> value)
+            case _                   => None
+          })
+          .toMap
       )
 
       new MainClassRunner(
